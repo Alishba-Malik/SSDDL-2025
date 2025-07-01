@@ -1,17 +1,8 @@
-from aplication import aplication
+from aplication import aplication, limiter, db
 from flask import render_template, redirect, request, url_for, send_file
 from flask_login import login_user, logout_user
-
-
-
-
 from werkzeug.security import generate_password_hash
-
-from werkzeug.security import generate_password_hash
-
-from aplication import aplication, db
 from aplication.models.models import Info
-
 import os
 from werkzeug.utils import secure_filename
 
@@ -26,6 +17,7 @@ def home():
     
 
 @aplication.route('/register', methods=['GET', 'POST']) # rota para cadastrar usuarios
+@limiter.limit("5 per minute")
 def register():
     if request.method == 'POST': 
         name = request.form['name'] 
@@ -42,6 +34,7 @@ def register():
 
 
 @aplication.route('/login', methods=['GET', 'POST']) # rota para fazer login de usuario
+@limiter.limit("5 per minute")
 def login():
     if request.method == 'POST': 
         email = request.form['email']
