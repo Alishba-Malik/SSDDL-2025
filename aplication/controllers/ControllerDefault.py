@@ -1,8 +1,7 @@
 from aplication import aplication
 from flask import render_template, redirect, request, url_for, send_file
 from flask_login import login_user, logout_user
-
-
+from flask import jsonify
 
 
 from werkzeug.security import generate_password_hash
@@ -11,6 +10,7 @@ from werkzeug.security import generate_password_hash
 
 from aplication import aplication, db
 from aplication.models.models import Info
+from aplication import aplication, limiter
 
 import os
 from werkzeug.utils import secure_filename
@@ -25,7 +25,8 @@ def home():
     return render_template('inicial.html')
     
 
-@aplication.route('/register', methods=['GET', 'POST']) # rota para cadastrar usuarios
+@aplication.route('/register', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def register():
     if request.method == 'POST': 
         name = request.form['name'] 
@@ -40,8 +41,8 @@ def register():
     return render_template( 'cadastrar.html')
 
 
-
-@aplication.route('/login', methods=['GET', 'POST']) # rota para fazer login de usuario
+@aplication.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def login():
     if request.method == 'POST': 
         email = request.form['email']
@@ -122,4 +123,8 @@ def upload():
 def image(filename):
     file = os.path.join(UPLOAD_FOLDER, filename + ".png")
     return send_file(file, mimetype="image/png")
-   
+
+@aplication.errorhandler(429)
+def ratelimit_handler(e):
+    # You can use jsonify or render_template for an HTML page
+    return jsonify(error="Too many requests, please try again in a minute."), 429
